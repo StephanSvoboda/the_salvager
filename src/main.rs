@@ -1,6 +1,5 @@
-use rltk::{Rltk, GameState, RGB, VirtualKeyCode};
+use rltk::{Rltk, GameState, RGB};
 use specs::prelude::*;
-use specs_derive::*;
 
 mod components;
 pub use components::*;
@@ -8,31 +7,14 @@ mod map;
 pub use map::*;
 mod player;
 use player::*;
-
-#[derive(Component)]
-struct LeftMover {}
-
-struct LeftWalker {}
-
-impl<'a> System<'a> for LeftWalker {
-    type SystemData = (ReadStorage<'a, LeftMover>, 
-                        WriteStorage<'a, Position>);
-
-    fn run(&mut self, (lefty, mut pos) : Self::SystemData) {
-        for (_lefty,pos) in (&lefty, &mut pos).join() {
-            pos.x -= 1;
-            if pos.x < 0 { pos.x = 79; }
-        }
-    }
-}
+mod rect;
+pub use rect::Rect;
 
 pub struct State {
     pub ecs: World
 }
 impl State {
     fn run_systems(&mut self) {
-        let mut lw = LeftWalker{};
-        lw.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -41,13 +23,14 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-
         self.run_systems();
+        
+        let map = self.ecs.fetch::<Vec<TileType>>();
+        draw_map(&map, ctx);
         
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        
         for (pos, render) in (&positions, &renderables).join() {
             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
         }
@@ -66,16 +49,17 @@ fn main() -> rltk::BError{
         //register Components
         gs.ecs.register::<Position>();
         gs.ecs.register::<Renderable>();
-        gs.ecs.register::<LeftMover>();
         gs.ecs.register::<Player>();
         
         //create map
-        gs.ecs.insert(new_map_test());
+        let (rooms, map) = new_map_rooms_and_corridors();
+        gs.ecs.insert(map);
+        let (player_x, player_y) = rooms[0].center();
         
         //add player
         gs.ecs
             .create_entity()
-            .with(Position {x: 40, y: 25})
+            .with(Position {x: player_x, y: player_y})
             .with(Renderable{
                 glyph: rltk::to_cp437('@'),
                 fg: RGB::named(rltk::YELLOW),
@@ -83,20 +67,6 @@ fn main() -> rltk::BError{
             })
             .with(Player{})
             .build();
-        
-        //add mobs
-        for i in 0..10 {
-            gs.ecs
-                .create_entity()
-                .with(Position{x:i*7, y: 20})
-                .with(Renderable {
-                    glyph: rltk::to_cp437('o'),
-                    fg: RGB::named(rltk::RED),
-                    bg: RGB::named(rltk::BLACK),
-                })
-                .with(LeftMover{})
-                .build();
-        }
 
     rltk::main_loop(context, gs)
 }
