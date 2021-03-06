@@ -6,7 +6,7 @@ use rltk::RandomNumberGenerator;
 use std::cmp::max;
 use std::cmp::min;
 use rltk::{ RGB, Rltk };
-use super::{Rect, Viewshed, Player};
+use super::{Rect};
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -17,7 +17,9 @@ pub struct Map {
     pub tiles : Vec<TileType>,
     pub rooms : Vec<Rect>,
     pub width : i32,
-    pub height : i32
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>,
+    pub visible_tiles : Vec<bool>
 }
 
 impl Map {
@@ -60,7 +62,9 @@ impl Map {
             tiles : vec![TileType::Wall; new_width*new_height],
             rooms : Vec::new(),
             width : new_width as i32,
-            height: new_height as i32
+            height: new_height as i32,
+            revealed_tiles : vec![false; new_width*new_height],
+            visible_tiles : vec![false; new_width*new_height]
         };
     
         const MAX_ROOMS : i32 = 30;
@@ -114,34 +118,35 @@ impl BaseMap for Map {
     }
 }
 
-pub fn draw_map(ecs: &mut World, ctx : &mut Rltk) {
-    let mut viewsheds = ecs.write_storage::<Viewshed>();
-    let mut players = ecs.write_storage::<Player>();
+pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
     let map = ecs.fetch::<Map>();
 
-    for (_player, viewshed) in (&mut players, &mut viewsheds).join() {
-        let mut y = 0;
-        let mut x = 0;
-        for tile in map.tiles.iter() {
-            // Render a tile depending upon the tile type
-            let pt = Point::new(x,y);
-            if viewshed.visible_tiles.contains(&pt) {
-                match tile {
-                    TileType::Floor => {
-                        ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
-                    }
-                    TileType::Wall => {
-                        ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
-                    }
+    let mut y = 0;
+    let mut x = 0;
+    for (idx,tile) in map.tiles.iter().enumerate() {
+        // Render a tile depending upon the tile type
+        if map.revealed_tiles[idx] {
+            let glyph;
+            let mut fg;
+            match tile {
+                TileType::Floor => {
+                    glyph = rltk::to_cp437('.');
+                    fg = RGB::from_f32(0.5, 0.5, 0.5);
+                }
+                TileType::Wall => {
+                    glyph = rltk::to_cp437('#');
+                    fg = RGB::from_f32(0.0, 1.0, 0.0);
                 }
             }
+            if !map.visible_tiles[idx] { fg = fg.to_greyscale() }
+            ctx.set(x, y, fg, RGB::from_f32(0.,0.,0.), glyph);
+        }
 
-            // Move the coordinates
-            x += 1;
-            if x > 79 {
-                x = 0;
-                y += 1;
-            }
+        // Move the coordinates
+        x += 1;
+        if x > map.width - 1 {
+            x = 0;
+            y += 1;
         }
     }
 }
