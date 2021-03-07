@@ -60,12 +60,20 @@ fn main() -> rltk::BError{
         //create map
         let map : Map = Map::new_map_rooms_and_corridors();
         let (player_x, player_y) = map.rooms[0].center();
+        let mut rng = rltk::RandomNumberGenerator::new();
         for room in map.rooms.iter().skip(1) {
             let (x,y) = room.center();
+
+            let glyph : rltk::FontCharType;
+            let roll = rng.roll_dice(1, 2);
+            match roll {
+                1 => { glyph = rltk::to_cp437('R')}
+                _ => { glyph = rltk::to_cp437('m')}
+            }
             gs.ecs.create_entity()
                 .with(Position{x,y})
                 .with(Renderable{
-                    glyph: rltk::to_cp437('R'),
+                    glyph: glyph,
                     fg: RGB::named(rltk::BLUE),
                     bg: RGB::named(rltk::BLACK)
                 })
@@ -73,6 +81,7 @@ fn main() -> rltk::BError{
                     visible_tiles: Vec::new(), 
                     range: 8, 
                     dirty: true})
+                .with(Robot{})
                 .build();
         }
         gs.ecs.insert(map);
