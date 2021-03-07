@@ -76,17 +76,18 @@ impl Map {
     }
 
     pub fn new_map_rooms_and_corridors() -> Map {
-        let new_width : usize = 80;
-        let new_height : usize = 50;
+        const MAP_WIDTH : usize = 80;
+        const MAP_HEIGHT : usize = 43;
+        const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
         let mut map = Map{
-            tiles : vec![TileType::Wall; new_width*new_height],
+            tiles : vec![TileType::Wall; MAP_COUNT],
             rooms : Vec::new(),
-            width : new_width as i32,
-            height: new_height as i32,
-            revealed_tiles : vec![false; new_width*new_height],
-            visible_tiles : vec![false; new_width*new_height],
-            blocked_tiles : vec![false; new_width*new_height],
-            tile_content : vec![Vec::new(); new_width*new_height],
+            width : MAP_WIDTH as i32,
+            height: MAP_HEIGHT as i32,
+            revealed_tiles : vec![false; MAP_COUNT],
+            visible_tiles : vec![false; MAP_COUNT],
+            blocked_tiles : vec![false; MAP_COUNT],
+            tile_content : vec![Vec::new(); MAP_COUNT],
         };
     
         const MAX_ROOMS : i32 = 30;

@@ -1,6 +1,5 @@
 use specs::prelude::*;
 use super::{Map, Position, BlocksTile};
-use rltk::{console};
 
 pub struct MapIndexingSystem {}
 
@@ -21,7 +20,6 @@ impl<'a> System<'a> for MapIndexingSystem {
             let _p : Option<&BlocksTile> = blockers.get(entity);
             if let Some(_p) = _p {
                 map.blocked_tiles[idx] = true;
-                console::log(format!("tile {},{} gets blocked", position.x, position.y))
             }
             map.tile_content[idx].push(entity);
         }
