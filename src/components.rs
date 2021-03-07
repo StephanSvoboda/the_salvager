@@ -32,3 +32,6 @@ pub struct Robot {}
 pub struct Name {
     pub name : String
 }
+
+#[derive(Component, Debug)]
+pub struct BlocksTile {}

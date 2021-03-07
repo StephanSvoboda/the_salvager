@@ -19,7 +19,8 @@ pub struct Map {
     pub width : i32,
     pub height : i32,
     pub revealed_tiles : Vec<bool>,
-    pub visible_tiles : Vec<bool>
+    pub visible_tiles : Vec<bool>,
+    pub blocked_tiles : Vec<bool>
 }
 
 impl Map {
@@ -40,7 +41,7 @@ impl Map {
     fn apply_horizontal_tunnel(&mut self, x1:i32, x2:i32, y:i32) {
         for x in min(x1,x2) ..= max(x1,x2) {
             let idx = self.xy_idx(x, y);
-            if idx > 0 && idx < 80*50 {
+            if idx > 0 && idx < (self.width*self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor;
             }
         }
@@ -49,7 +50,7 @@ impl Map {
     fn apply_vertical_tunnel(&mut self, y1:i32, y2:i32, x:i32) {
         for y in min(y1,y2) ..= max(y1,y2) {
             let idx = self.xy_idx(x, y);
-            if idx > 0 && idx < 80*50 {
+            if idx > 0 && idx < (self.width*self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor;
             }
         }
@@ -58,7 +59,13 @@ impl Map {
     fn is_exit_valid(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
         let idx = self.xy_idx(x, y);
-        self.tiles[idx as usize] != TileType::Wall
+        !self.blocked_tiles[idx]
+    }
+
+    pub fn populate_blocked(&mut self) {
+        for (i,tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked_tiles[i] = *tile == TileType::Wall;
+        }
     }
 
     pub fn new_map_rooms_and_corridors() -> Map {
@@ -70,7 +77,8 @@ impl Map {
             width : new_width as i32,
             height: new_height as i32,
             revealed_tiles : vec![false; new_width*new_height],
-            visible_tiles : vec![false; new_width*new_height]
+            visible_tiles : vec![false; new_width*new_height],
+            blocked_tiles : vec![false; new_width*new_height],
         };
     
         const MAX_ROOMS : i32 = 30;
