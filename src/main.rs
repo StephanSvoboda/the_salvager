@@ -11,23 +11,38 @@ mod rect;
 pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
+mod robot_ai_system;
+use robot_ai_system::RobotAI;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {Paused, Running}
 
 pub struct State {
-    pub ecs: World
+    pub ecs: World,
+    pub run_state: RunState
 }
+
+
 impl State {
     fn run_systems(&mut self) {
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
+        let mut mob = RobotAI{};
+        mob.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
+
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk){
         ctx.cls();
 
-        player_input(self, ctx);
-        self.run_systems();
+        if self.run_state == RunState::Running {
+            self.run_systems();
+            self.run_state = RunState::Paused;
+        }else{
+            self.run_state = player_input(self, ctx);
+        }
 
         draw_map(&mut self.ecs, ctx);
         
@@ -48,7 +63,8 @@ fn main() -> rltk::BError{
         .with_title("Roguelike Tutorial")
         .build()?;
         let mut gs = State{
-            ecs: World::new()
+            ecs: World::new(),
+            run_state : RunState::Running
         };
         
         //register Components
@@ -56,6 +72,7 @@ fn main() -> rltk::BError{
         gs.ecs.register::<Renderable>();
         gs.ecs.register::<Player>();
         gs.ecs.register::<Viewshed>();
+        gs.ecs.register::<Robot>();
         
         //create map
         let map : Map = Map::new_map_rooms_and_corridors();
