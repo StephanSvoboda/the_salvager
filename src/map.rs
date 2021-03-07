@@ -20,7 +20,8 @@ pub struct Map {
     pub height : i32,
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
-    pub blocked_tiles : Vec<bool>
+    pub blocked_tiles : Vec<bool>,
+    pub tile_content : Vec<Vec<Entity>>
 }
 
 impl Map {
@@ -68,6 +69,12 @@ impl Map {
         }
     }
 
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
+
     pub fn new_map_rooms_and_corridors() -> Map {
         let new_width : usize = 80;
         let new_height : usize = 50;
@@ -79,6 +86,7 @@ impl Map {
             revealed_tiles : vec![false; new_width*new_height],
             visible_tiles : vec![false; new_width*new_height],
             blocked_tiles : vec![false; new_width*new_height],
+            tile_content : vec![Vec::new(); new_width*new_height],
         };
     
         const MAX_ROOMS : i32 = 30;
