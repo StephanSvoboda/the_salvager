@@ -19,6 +19,12 @@ impl <'a> System<'a> for RobotAI {
         let (mut map, player_position, mut viewsheds, robots, names, mut positions) = data;
 
         for (_viewshed, _robot, _name,mut pos) in (&mut viewsheds, &robots, &names, &mut positions).join() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_position);
+            if distance < 1.5 {
+                // Attack goes here
+                console::log(&format!("{} shouts insults", _name.name));
+                return;
+            }
             if _viewshed.visible_tiles.contains(&*player_position){
                 console::log(format!("{} sees Player at {},{}",_name.name, player_position.x, player_position.y));
                 let path = rltk::a_star_search(
