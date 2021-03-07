@@ -1,6 +1,6 @@
 use specs::prelude::*;
-use super::{Viewshed, Robot, Name, Map, Position};
-use rltk::{Point, console};
+use super::{Viewshed, Robot, Map, Position, WantsToMelee, RunState};
+use rltk::{Point};
 
 pub struct RobotAI {}
 
@@ -9,34 +9,40 @@ impl <'a> System<'a> for RobotAI {
     type SystemData = (
         WriteExpect<'a, Map>,
         ReadExpect<'a, Point>,
+        ReadExpect<'a, Entity>,
+        ReadExpect<'a, RunState>,
+        Entities<'a>,
         WriteStorage<'a, Viewshed>,
         ReadStorage<'a, Robot>,
-        ReadStorage<'a, Name>,
-        WriteStorage<'a, Position>
+        WriteStorage<'a, Position>,
+        WriteStorage<'a, WantsToMelee>
     );
 
-    fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_position, mut viewsheds, robots, names, mut positions) = data;
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, player_pos, player_entity, _runstate, entities, mut viewshed, robots, mut position, mut wants_to_melee) = data;
 
-        for (_viewshed, _robot, _name,mut pos) in (&mut viewsheds, &robots, &names, &mut positions).join() {
-            let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_position);
+        if *_runstate != RunState::MonsterTurn { return }
+
+        for (entity, mut viewshed,_robot,mut pos) in (&entities, &mut viewshed, &robots, &mut position).join() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
             if distance < 1.5 {
-                // Attack goes here
-                console::log(&format!("{} shouts insults", _name.name));
-                return;
+                wants_to_melee.insert(entity, WantsToMelee{ target: *player_entity }).expect("Unable to insert attack");
             }
-            if _viewshed.visible_tiles.contains(&*player_position){
-                console::log(format!("{} sees Player at {},{}",_name.name, player_position.x, player_position.y));
+            else if viewshed.visible_tiles.contains(&*player_pos) {
+                // Path to the player
                 let path = rltk::a_star_search(
-                    map.xy_idx(pos.x, pos.y) as i32,
-                    map.xy_idx(player_position.x, player_position.y) as i32,
+                    map.xy_idx(pos.x, pos.y),
+                    map.xy_idx(player_pos.x, player_pos.y),
                     &mut *map
                 );
                 if path.success && path.steps.len()>1 {
+                    let mut idx = map.xy_idx(pos.x, pos.y);
+                    map.blocked_tiles[idx] = false;
                     pos.x = path.steps[1] as i32 % map.width;
                     pos.y = path.steps[1] as i32 / map.width;
-                    console::log(format!("{} hunts player moving to {},{}", _name.name, pos.x, pos.y));
-                    _viewshed.dirty = true;
+                    idx = map.xy_idx(pos.x, pos.y);
+                    map.blocked_tiles[idx] = true;
+                    viewshed.dirty = true;
                 }
             }
         }
