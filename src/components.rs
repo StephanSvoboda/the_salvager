@@ -27,3 +27,8 @@ pub struct Viewshed {
 
 #[derive(Component, Debug)]
 pub struct Robot {}
+
+#[derive(Component, Debug)]
+pub struct Name {
+    pub name : String
+}
