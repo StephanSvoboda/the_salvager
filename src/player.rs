@@ -1,7 +1,7 @@
 use rltk::Point;
 use rltk::{VirtualKeyCode, Rltk};
 use specs::prelude::*;
-use super::{Position, Player, TileType, Map, State, Viewshed, RunState};
+use super::{Position, Player, Map, State, Viewshed, RunState};
 use std::cmp::{min, max};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -45,6 +45,19 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState{
             VirtualKeyCode::Down |
             VirtualKeyCode::Numpad2 |
             VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
+
+            // Diagonals
+            VirtualKeyCode::Numpad9 |
+            VirtualKeyCode::Y => try_move_player(1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad7 |
+            VirtualKeyCode::U => try_move_player(-1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad3 |
+            VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad1 |
+            VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
 
             _ => { return RunState::Paused}
         },
