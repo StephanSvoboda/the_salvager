@@ -1,3 +1,4 @@
+use rltk::Point;
 use rltk::{Rltk, GameState, RGB};
 use specs::prelude::*;
 
@@ -115,6 +116,7 @@ fn main() -> rltk::BError{
             .with(Player{})
             .with(Viewshed{ visible_tiles: Vec::new(), range : 8, dirty: true})
             .build();
+        gs.ecs.insert(Point::new(player_x, player_y));
 
     rltk::main_loop(context, gs)
 }
