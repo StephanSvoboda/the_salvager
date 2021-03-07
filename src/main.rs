@@ -23,6 +23,8 @@ use damage_system::DamageSystem;
 mod gui;
 mod gamelog;
 mod spawner;
+mod inventory_system;
+use inventory_system::ItemCollectionSystem;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
@@ -44,6 +46,8 @@ impl State {
         melee.run_now(&self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -116,6 +120,10 @@ fn main() -> rltk::BError{
     gs.ecs.register::<CombatStats>();
     gs.ecs.register::<WantsToMelee>();
     gs.ecs.register::<SufferDamage>();
+    gs.ecs.register::<Item>();
+    gs.ecs.register::<StimPack>();
+    gs.ecs.register::<InBackpack>();
+    gs.ecs.register::<WantsToPickupItem>();
     
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -123,8 +131,7 @@ fn main() -> rltk::BError{
     
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        let (x,y) = room.center();
-        spawner::random_robot(&mut gs.ecs, x, y);
+        spawner::spawn_room(&mut gs.ecs, room);
     }
     
     gs.ecs.insert(map);

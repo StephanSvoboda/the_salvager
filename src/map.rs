@@ -8,6 +8,10 @@ use std::cmp::min;
 use rltk::{ RGB, Rltk };
 use super::{Rect};
 
+pub const MAP_WIDTH : usize = 80;
+pub const MAP_HEIGHT : usize = 43;
+pub const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
     Wall, Floor
@@ -76,9 +80,6 @@ impl Map {
     }
 
     pub fn new_map_rooms_and_corridors() -> Map {
-        const MAP_WIDTH : usize = 80;
-        const MAP_HEIGHT : usize = 43;
-        const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
         let mut map = Map{
             tiles : vec![TileType::Wall; MAP_COUNT],
             rooms : Vec::new(),
