@@ -184,7 +184,7 @@ pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenu
         for idx in visible.visible_tiles.iter() {
             let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
             if distance <= range as f32 {
-                ctx.set_bg(idx.x, idx.y, RGB::named(rltk::BLUE));
+                ctx.set_bg(idx.x, idx.y, RGB::named(rltk::MIDNIGHTBLUE));
                 available_cells.push(idx);
             }
         }

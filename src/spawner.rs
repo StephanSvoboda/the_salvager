@@ -131,10 +131,11 @@ fn random_item(ecs: &mut World, x: i32, y: i32) {
     let roll :i32;
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1, 2);
+        roll = rng.roll_dice(1, 3);
     }
     match roll {
         1 => { stim_packs(ecs, x, y) }
+        2 => { laser_torch(ecs, x, y) }
         _ => { grenades(ecs, x, y) }
     }
 }
@@ -169,5 +170,21 @@ fn grenades(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
+        .build();
+}
+
+fn laser_torch(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('t'),
+            fg: RGB::named(rltk::LIGHTYELLOW1),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Laser torch".to_string() })
+        .with(Item{})
+        .with(Ranged{ range: 2 })
+        .with(InflictsDamage{ damage: 4 })
         .build();
 }
