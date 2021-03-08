@@ -15,7 +15,8 @@ use super::{
     Item,
     Consumable,
     Ranged,
-    InflictsDamage
+    InflictsDamage,
+    AreaOfEffect
 };
 
 const MAX_ROBOTS : i32 = 4;
@@ -170,6 +171,7 @@ fn grenades(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
+        .with(AreaOfEffect{ radius: 3 })
         .build();
 }
 
@@ -184,7 +186,7 @@ fn laser_torch(ecs: &mut World, x: i32, y: i32) {
         })
         .with(Name{ name : "Laser torch".to_string() })
         .with(Item{})
-        .with(Ranged{ range: 2 })
+        .with(Ranged{ range: 3 })
         .with(InflictsDamage{ damage: 4 })
         .build();
 }
