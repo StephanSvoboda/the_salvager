@@ -1,6 +1,22 @@
 use rltk::{ RGB, RandomNumberGenerator };
 use specs::prelude::*;
-use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Robot, BlocksTile, map::MAP_WIDTH, Rect, StimPack, Item};
+use super::{
+    CombatStats, 
+    Player,
+    Renderable, 
+    Name, 
+    Position, 
+    Viewshed, 
+    Robot, 
+    BlocksTile, 
+    map::MAP_WIDTH, 
+    Rect, 
+    ProvidesHealing, 
+    Item,
+    Consumable,
+    Ranged,
+    InflictsDamage
+};
 
 const MAX_ROBOTS : i32 = 4;
 const MAX_ITEMS : i32 = 2;
@@ -53,7 +69,7 @@ pub fn spawn_room(ecs: &mut World, room : &Rect) {
     for idx in item_spawn_points.iter() {
         let x = *idx % MAP_WIDTH;
         let y = *idx / MAP_WIDTH;
-        stim_packs(ecs, x as i32, y as i32);
+        random_item(ecs, x as i32, y as i32);
     }
 }
 
@@ -111,6 +127,18 @@ fn mob<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : rltk::FontCharType
         .build();
 }
 
+fn random_item(ecs: &mut World, x: i32, y: i32) {
+    let roll :i32;
+    {
+        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
+        roll = rng.roll_dice(1, 2);
+    }
+    match roll {
+        1 => { stim_packs(ecs, x, y) }
+        _ => { grenades(ecs, x, y) }
+    }
+}
+
 fn stim_packs(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position{ x, y })
@@ -122,6 +150,24 @@ fn stim_packs(ecs: &mut World, x: i32, y: i32) {
         })
         .with(Name{ name : "Basic Stim Pack".to_string() })
         .with(Item{})
-        .with(StimPack{ heal_amount: 8 })
+        .with(Consumable{})
+        .with(ProvidesHealing{ heal_amount: 8 })
+        .build();
+}
+
+fn grenades(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('g'),
+            fg: RGB::named(rltk::DARK_OLIVE),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Grenade".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(InflictsDamage{ damage: 8 })
         .build();
 }

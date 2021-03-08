@@ -1,9 +1,19 @@
-use super::WantsToInjectStimPack;
+use super::WantsToUseItem;
 use super::WantsToDropItem;
-use super::StimPack;
+use super::ProvidesHealing;
 use super::CombatStats;
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog};
+use super::{
+    WantsToPickupItem, 
+    Name, 
+    InBackpack, 
+    Position, 
+    gamelog::GameLog, 
+    Consumable, 
+    InflictsDamage, 
+    Map,
+    SufferDamage
+};
 
 pub struct ItemCollectionSystem {}
 
@@ -33,38 +43,83 @@ impl<'a> System<'a> for ItemCollectionSystem {
     }
 }
 
-pub struct StimPackUseSystem {}
+pub struct ItemUseSystem {}
 
-impl<'a> System<'a> for StimPackUseSystem {
+impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( ReadExpect<'a, Entity>,
+                        ReadExpect<'a, Map>,
                         WriteExpect<'a, GameLog>,
                         Entities<'a>,
-                        WriteStorage<'a, WantsToInjectStimPack>,
+                        WriteStorage<'a, WantsToUseItem>,
                         ReadStorage<'a, Name>,
-                        ReadStorage<'a, StimPack>,
-                        WriteStorage<'a, CombatStats>
+                        ReadStorage<'a, Consumable>,
+                        ReadStorage<'a, ProvidesHealing>,
+                        ReadStorage<'a, InflictsDamage>,
+                        WriteStorage<'a, CombatStats>,
+                        WriteStorage<'a, SufferDamage>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_injection, names, stim_packs, mut combat_stats) = data;
+        let (
+            player_entity, 
+            map, 
+            mut gamelog, 
+            entities, 
+            mut wants_use, 
+            names, 
+            consumables, 
+            healings, 
+            inflict_damage, 
+            mut combat_stats,
+            mut suffer_damage
+        ) = data;
 
-        for (entity, inject, stats) in (&entities, &wants_injection, &mut combat_stats).join() {
-            let stim_pack = stim_packs.get(inject.stim_pack);
-            match stim_pack {
+        for (entity, useitem, stats) in (&entities, &wants_use, &mut combat_stats).join() {
+            let mut used_item = true;
+            let healing_item = healings.get(useitem.item);
+            match healing_item {
                 None => {
                 }
-                Some(stim_pack) => {
-                    stats.hp = i32::min(stats.max_hp, stats.hp + stim_pack.heal_amount);
+                Some(healing_item) => {
+                    stats.hp = i32::min(stats.max_hp, stats.hp + healing_item.heal_amount);
                     if entity == *player_entity {
-                        gamelog.entries.push(format!("You inject the {}, healing {} hp.", names.get(inject.stim_pack).unwrap().name, stim_pack.heal_amount));
+                        gamelog.entries.push(format!("You inject the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healing_item.heal_amount));
                     }
-                    entities.delete(inject.stim_pack).expect("Delete failed");
+                    used_item = true
+                }
+            }
+            let item_damages = inflict_damage.get(useitem.item);
+            match item_damages {
+                None => {}
+                Some(damage) => {
+                    let target_point = useitem.target.unwrap();
+                    let idx = map.xy_idx(target_point.x, target_point.y);
+                    used_item = false;
+                    for mob in map.tile_content[idx].iter() {
+                        SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
+                        if entity == *player_entity {
+                            let mob_name = names.get(*mob).unwrap();
+                            let item_name = names.get(useitem.item).unwrap();
+                            gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                        }
+
+                        used_item = true;
+                    }
+                }
+            }
+            if used_item {
+                let consumable = consumables.get(useitem.item);
+                match consumable {
+                    None => {}
+                    Some(_) => {
+                        entities.delete(useitem.item).expect("Delete failed");
+                    }
                 }
             }
         }
 
-        wants_injection.clear();
+        wants_use.clear();
     }
 }
 
