@@ -16,7 +16,8 @@ use super::{
     Consumable,
     Ranged,
     InflictsDamage,
-    AreaOfEffect
+    AreaOfEffect,
+    Confusion
 };
 
 const MAX_ROBOTS : i32 = 4;
@@ -132,11 +133,12 @@ fn random_item(ecs: &mut World, x: i32, y: i32) {
     let roll :i32;
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1, 3);
+        roll = rng.roll_dice(1, 4);
     }
     match roll {
         1 => { stim_packs(ecs, x, y) }
         2 => { laser_torch(ecs, x, y) }
+        3 => { emp_bombs(ecs, x, y) }
         _ => { grenades(ecs, x, y) }
     }
 }
@@ -188,5 +190,22 @@ fn laser_torch(ecs: &mut World, x: i32, y: i32) {
         .with(Item{})
         .with(Ranged{ range: 3 })
         .with(InflictsDamage{ damage: 4 })
+        .build();
+}
+
+fn emp_bombs(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437(')'),
+            fg: RGB::named(rltk::PINK),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "EMP Bomb".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(Confusion{ turns: 4 })
         .build();
 }
