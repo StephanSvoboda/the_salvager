@@ -288,3 +288,17 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
 
     MainMenuResult::NoSelection { selected: MainMenuSelection::NewGame }
 }
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum GameOverResult { NoSelection, QuitToMenu }
+
+pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
+
+    ctx.print_color_centered(20, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
+
+    match ctx.key {
+        None => GameOverResult::NoSelection,
+        Some(_) => GameOverResult::QuitToMenu
+    }
+}
