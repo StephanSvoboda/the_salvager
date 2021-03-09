@@ -9,9 +9,9 @@ use rltk::{ RGB, Rltk };
 use super::{Rect};
 use serde::{Serialize, Deserialize};
 
-pub const MAP_WIDTH : usize = 80;
-pub const MAP_HEIGHT : usize = 43;
-pub const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
+const MAP_WIDTH : usize = 64;
+const MAP_HEIGHT : usize = 64;
+const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
