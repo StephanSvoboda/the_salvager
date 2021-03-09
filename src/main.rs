@@ -30,6 +30,8 @@ mod inventory_system;
 use inventory_system::ItemCollectionSystem;
 use inventory_system::ItemUseSystem;
 use inventory_system::ItemDropSystem;
+use crate::inventory_system::ItemRemoveSystem;
+
 mod saveload_system;
 mod camera;
 
@@ -44,7 +46,8 @@ pub enum RunState {
     ShowTargeting { range : i32, item : Entity} ,
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
-    GameOver
+    GameOver,
+    ShowRemoveItem
  }
 
 pub struct State {
@@ -70,6 +73,8 @@ impl State {
         item_use.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem{};
         drop_items.run_now(&self.ecs);
+        let mut item_remove = ItemRemoveSystem{};
+        item_remove.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -150,6 +155,19 @@ impl GameState for State {
                             intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity, target: None }).expect("Unable to insert intent");
                             new_run_state = RunState::PlayerTurn;
                         }
+                    }
+                }
+            }
+            RunState::ShowRemoveItem => {
+                let result = gui::remove_item_menu(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => new_run_state = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        new_run_state = RunState::PlayerTurn;
                     }
                 }
             }
@@ -249,7 +267,7 @@ impl State {
 
 fn main() -> rltk::BError{
     use rltk::RltkBuilder;
-    let mut context = RltkBuilder::simple(80,60)
+    let context = RltkBuilder::simple(80,60)
         .unwrap()
         .with_title("The Salvager - 7DLR 2021")
         .build()?;
@@ -282,13 +300,18 @@ fn main() -> rltk::BError{
     gs.ecs.register::<Confusion>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
+    gs.ecs.register::<Equippable>();
+    gs.ecs.register::<Equipped>();
+    gs.ecs.register::<MeleePowerBonus>();
+    gs.ecs.register::<WantsToRemoveItem>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
-    
+    spawner::laser_torch(&mut gs.ecs, player_x, player_y);
+
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
         spawner::spawn_room(&mut gs.ecs, room);

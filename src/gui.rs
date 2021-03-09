@@ -1,18 +1,19 @@
-use rltk::{RGB, Rltk, Point, VirtualKeyCode, console};
+use rltk::{Point, RGB, Rltk, VirtualKeyCode};
 use specs::prelude::*;
+
+use crate::{camera, Consumable, Equipped};
+
 use super::{
     CombatStats,
-    Player,
-    gamelog::GameLog, 
-    Map, 
-    Name, 
-    Position, 
-    State, 
-    InBackpack, 
-    Viewshed,
-    RunState
+    gamelog::GameLog,
+    InBackpack,
+    Map,
+    Name,
+    Position,
+    RunState,
+    State,
+    Viewshed
 };
-use crate::{camera, Consumable};
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     use rltk::to_cp437;
@@ -45,8 +46,19 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let player_stats = stats.get(*player_entity).unwrap();
     draw_pool(ctx, black, white, player_stats);
 
-
+    // Equipped
     let mut y = 9;
+    let equipped = ecs.read_storage::<Equipped>();
+    let name = ecs.read_storage::<Name>();
+    for (equipped_by, item_name) in (&equipped, &name).join() {
+        if equipped_by.owner == *player_entity {
+            ctx.print_color(50, y, white, black, &item_name.name);
+            y += 1;
+        }
+    }
+
+
+    y += 1;
     let green = RGB::from_f32(0.0, 1.0, 0.0);
     let yellow = RGB::named(rltk::YELLOW);
     let consumables = ecs.read_storage::<Consumable>();
@@ -122,7 +134,7 @@ impl Tooltip {
 fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     use rltk::to_cp437;
 
-    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs);
     let map = ecs.fetch::<Map>();
     let mouse_pos = ctx.mouse_pos();
     let mut mouse_map_pos = mouse_pos;
@@ -142,7 +154,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
 
 
     let mut tip_boxes : Vec<Tooltip> = Vec::new();
-    for (entity, name, position) in (&entities, &names, &positions).join() {
+    for (_entity, name, position) in (&entities, &names, &positions).join() {
         if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
             let mut tip = Tooltip::new();
             tip.add(name.name.to_string());
@@ -282,7 +294,7 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
 }
 
 pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
-    let (min_x, max_x, min_y, max_y) = camera::get_screen_bounds(&gs.ecs, ctx);
+    let (min_x, max_x, min_y, max_y) = camera::get_screen_bounds(&gs.ecs);
     let player_entity = gs.ecs.fetch::<Entity>();
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
@@ -438,5 +450,49 @@ pub fn draw_hollow_box(
     for y in sy + 1..sy + height {
         console.set(sx, y, fg, bg, to_cp437('│'));
         console.set(sx + width, y, fg, bg, to_cp437('│'));
+    }
+}
+
+pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<Equipped>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Remove Which Item?");
+    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as rltk::FontCharType);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
     }
 }

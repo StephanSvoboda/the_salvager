@@ -21,7 +21,8 @@ use super::{
     Confusion,
     SerializeMe
 };
-use crate::Pool;
+use crate::{Pool, Equippable, EquipmentSlot, MeleePowerBonus};
+use crate::melee_combat_system::MeleeCombatSystem;
 
 const MAX_ROBOTS : i32 = 4;
 const MAX_ITEMS : i32 = 2;
@@ -184,7 +185,7 @@ fn grenades(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn laser_torch(ecs: &mut World, x: i32, y: i32) {
+pub fn laser_torch(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position{ x, y })
         .with(Renderable{
@@ -195,9 +196,9 @@ fn laser_torch(ecs: &mut World, x: i32, y: i32) {
         })
         .with(Name{ name : "Laser torch".to_string() })
         .with(Item{})
-        .with(Ranged{ range: 3 })
-        .with(InflictsDamage{ damage: 4 })
+        .with(MeleePowerBonus{ power: 4 })
         .marked::<SimpleMarker<SerializeMe>>()
+        .with(Equippable{ slot: EquipmentSlot::Weapon })
         .build();
 }
 
