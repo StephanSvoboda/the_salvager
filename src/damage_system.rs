@@ -11,7 +11,7 @@ impl<'a> System<'a> for DamageSystem {
         let (mut stats, mut damage) = data;
 
         for (mut stats, damage) in (&mut stats, &damage).join() {
-            stats.hp -= damage.amount.iter().sum::<i32>();
+            stats.hp.current -= damage.amount.iter().sum::<i32>();
         }
 
         damage.clear();
@@ -28,7 +28,7 @@ pub fn delete_the_dead(ecs : &mut World) {
         let entities = ecs.entities();
         let mut log = ecs.write_resource::<GameLog>();
         for (entity, stats) in (&entities, &combat_stats).join() {
-            if stats.hp < 1 { 
+            if stats.hp.current < 1 {
                 let player = players.get(entity);
                 match player {
                     None => {

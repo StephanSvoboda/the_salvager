@@ -12,18 +12,54 @@ use super::{
     Viewshed,
     RunState
 };
-use crate::camera;
+use crate::{camera, Consumable};
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
-    ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
-    
-    let combat_stats = ecs.read_storage::<CombatStats>();
-    let players = ecs.read_storage::<Player>();
-    for (_player, stats) in (&players, &combat_stats).join() {
-        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
-        ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
+    use rltk::to_cp437;
+    let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
+    let black = RGB::named(rltk::BLACK);
+    let white = RGB::named(rltk::WHITE);
 
-        ctx.draw_bar_horizontal(28, 43, 51, stats.hp, stats.max_hp, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+    draw_hollow_box(ctx, 0, 0, 79, 59, box_gray, black); // Overall box
+    draw_hollow_box(ctx, 0, 0, 49, 45, box_gray, black); // Map box
+    draw_hollow_box(ctx, 0, 45, 79, 14, box_gray, black); // Log box
+    draw_hollow_box(ctx, 49, 0, 30, 8, box_gray, black); // Top-right panel
+    ctx.set(0, 45, box_gray, black, to_cp437('├'));
+    ctx.set(49, 8, box_gray, black, to_cp437('├'));
+    ctx.set(49, 0, box_gray, black, to_cp437('┬'));
+    ctx.set(49, 45, box_gray, black, to_cp437('┴'));
+    ctx.set(79, 8, box_gray, black, to_cp437('┤'));
+    ctx.set(79, 45, box_gray, black, to_cp437('┤'));
+
+    let map = ecs.fetch::<Map>();
+    let name_length = map.name.len() + 2;
+    let x_pos = (22 - (name_length / 2)) as i32;
+    ctx.set(x_pos, 0, box_gray, black, to_cp437('┤'));
+    ctx.set(x_pos + name_length as i32, 0, box_gray, black, to_cp437('├'));
+    ctx.print_color(x_pos+1, 0, white, black, &map.name);
+    std::mem::drop(map);
+
+    // Draw stats
+    let player_entity = ecs.fetch::<Entity>();
+    let stats = ecs.read_storage::<CombatStats>();
+    let player_stats = stats.get(*player_entity).unwrap();
+    draw_pool(ctx, black, white, player_stats);
+
+
+    let mut y = 9;
+    let green = RGB::from_f32(0.0, 1.0, 0.0);
+    let yellow = RGB::named(rltk::YELLOW);
+    let consumables = ecs.read_storage::<Consumable>();
+    let backpack = ecs.read_storage::<InBackpack>();
+    let name = ecs.read_storage::<Name>();
+    let mut index = 1;
+    for (carried_by, _consumable, item_name) in (&backpack, &consumables, &name).join() {
+        if carried_by.owner == *player_entity && index < 10 {
+            ctx.print_color(50, y, yellow, black, &format!("↑{}", index));
+            ctx.print_color(53, y, green, black, &item_name.name);
+            y += 1;
+            index += 1;
+        }
     }
 
     let log = ecs.fetch::<GameLog>();
@@ -36,6 +72,12 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let mouse_pos = ctx.mouse_pos();
     ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
     draw_tooltips(ecs, ctx)
+}
+
+fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, player_stats: &CombatStats) {
+    let health = format!("Health: {}/{}", player_stats.hp.current, player_stats.hp.max);
+    ctx.print_color(50, 1, white, black, &health);
+    ctx.draw_bar_horizontal(64, 1, 14, player_stats.hp.current, player_stats.hp.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
 }
 
 fn draw_tooltips(ecs: &World, ctx : &mut Rltk){
@@ -320,5 +362,30 @@ pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
     match ctx.key {
         None => GameOverResult::NoSelection,
         Some(_) => GameOverResult::QuitToMenu
+    }
+}
+
+pub fn draw_hollow_box(
+    console: &mut Rltk,
+    sx: i32,
+    sy: i32,
+    width: i32,
+    height: i32,
+    fg: RGB,
+    bg: RGB,
+) {
+    use rltk::to_cp437;
+
+    console.set(sx, sy, fg, bg, to_cp437('┌'));
+    console.set(sx + width, sy, fg, bg, to_cp437('┐'));
+    console.set(sx, sy + height, fg, bg, to_cp437('└'));
+    console.set(sx + width, sy + height, fg, bg, to_cp437('┘'));
+    for x in sx + 1..sx + width {
+        console.set(x, sy, fg, bg, to_cp437('─'));
+        console.set(x, sy + height, fg, bg, to_cp437('─'));
+    }
+    for y in sy + 1..sy + height {
+        console.set(sx, y, fg, bg, to_cp437('│'));
+        console.set(sx + width, y, fg, bg, to_cp437('│'));
     }
 }

@@ -27,6 +27,7 @@ pub struct Map {
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
     pub blocked_tiles : Vec<bool>,
+    pub name: String,
     
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -94,6 +95,7 @@ impl Map {
             visible_tiles : vec![false; MAP_COUNT],
             blocked_tiles : vec![false; MAP_COUNT],
             tile_content : vec![Vec::new(); MAP_COUNT],
+            name : "The wreck".to_string()
         };
     
         const MAX_ROOMS : i32 = 30;

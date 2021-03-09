@@ -4,7 +4,7 @@ use rltk::{Point, Rltk, RGB};
 
 pub fn get_screen_bounds(ecs: &World, ctx : &mut Rltk) -> (i32, i32, i32, i32) {
     let player_pos = ecs.fetch::<Point>();
-    let (x_chars, y_chars) = ctx.get_char_size();
+    let (x_chars, y_chars) = (48, 44);
 
     let center_x = (x_chars / 2) as i32;
     let center_y = (y_chars / 2) as i32;

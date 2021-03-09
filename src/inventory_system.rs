@@ -120,7 +120,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     for target in targets.iter(){
                         let stats = combat_stats.get_mut(*target);
                         if let Some(stats) = stats {
-                            stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
+                            stats.hp.current = i32::min(stats.hp.max, stats.hp.current + healer.heal_amount);
                             if entity == *player_entity {
                                 gamelog.entries.push(format!("You inject the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                             }

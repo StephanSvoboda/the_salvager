@@ -42,8 +42,7 @@ pub struct BlocksTile {}
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
-    pub max_hp : i32,
-    pub hp : i32,
+    pub hp : Pool,
     pub defense : i32,
     pub power : i32
 }
@@ -128,4 +127,10 @@ pub struct SerializeMe;
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SerializationHelper {
     pub map : super::map::Map
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Pool {
+    pub max: i32,
+    pub current: i32
 }
