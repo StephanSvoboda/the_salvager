@@ -249,8 +249,9 @@ impl State {
 
 fn main() -> rltk::BError{
     use rltk::RltkBuilder;
-    let context = RltkBuilder::simple80x50()
-        .with_title("Roguelike Tutorial")
+    let mut context = RltkBuilder::simple(80,60)
+        .unwrap()
+        .with_title("The Salvager - 7DLR 2021")
         .build()?;
 
     let mut gs = State{
