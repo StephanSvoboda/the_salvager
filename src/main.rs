@@ -36,6 +36,8 @@ use ranged_combat_system::RangedCombatSystem;
 
 mod saveload_system;
 mod camera;
+mod energy_system;
+use energy_system::EnergySystem;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { 
@@ -71,6 +73,8 @@ impl State {
         ranged_combat_system.run_now(&self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
+        let mut energy = EnergySystem{};
+        energy.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
         let mut item_use = ItemUseSystem{};
@@ -312,6 +316,7 @@ fn main() -> rltk::BError{
     gs.ecs.register::<RangedWeapon>();
     gs.ecs.register::<Target>();
     gs.ecs.register::<WantsToShoot>();
+    gs.ecs.register::<DrainEnergy>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     

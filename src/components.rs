@@ -69,6 +69,22 @@ impl SufferDamage {
     }
 }
 
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct DrainEnergy {
+    pub amount : Vec<i32>
+}
+
+impl DrainEnergy {
+    pub fn new_energy(store: &mut WriteStorage<DrainEnergy>, victim: Entity, amount: i32) {
+        if let Some(suffering) = store.get_mut(victim) {
+            suffering.amount.push(amount);
+        } else {
+            let dmg = DrainEnergy { amount : vec![amount] };
+            store.insert(victim, dmg).expect("Unable to insert damage");
+        }
+    }
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {}
 
