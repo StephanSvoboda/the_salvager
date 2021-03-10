@@ -107,7 +107,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
 fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, pool: &Pool, bar_color: RGB, y: i32) {
     let pool_text = format!("{}: {}/{}", pool.name, pool.current, pool.max);
     ctx.print_color(50, y, white, black, &pool_text);
-    ctx.draw_bar_horizontal(64, y, 14, pool.current, pool.max, bar_color, RGB::named(rltk::BLACK));
+    ctx.draw_bar_horizontal(66, y, 12, pool.current, pool.max, bar_color, RGB::named(rltk::BLACK));
 }
 
 struct Tooltip {
