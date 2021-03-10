@@ -54,7 +54,8 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let player_entity = ecs.fetch::<Entity>();
     let stats = ecs.read_storage::<CombatStats>();
     let player_stats = stats.get(*player_entity).unwrap();
-    draw_pool(ctx, black, white, &player_stats.hp);
+    draw_pool(ctx, black, white, &player_stats.hp, RGB::named(rltk::RED), 2);
+    draw_pool(ctx, black, white, &player_stats.energy, RGB::named(rltk::YELLOW), 4);
 
     // Equipped
     let mut y = 9;
@@ -102,10 +103,10 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     draw_tooltips(ecs, ctx)
 }
 
-fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, pool: &Pool) {
+fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, pool: &Pool, bar_color: RGB, y: i32) {
     let pool_text = format!("{}: {}/{}", pool.name, pool.current, pool.max);
-    ctx.print_color(50, 1, white, black, &pool_text);
-    ctx.draw_bar_horizontal(64, 1, 14, pool.current, pool.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+    ctx.print_color(50, y, white, black, &pool_text);
+    ctx.draw_bar_horizontal(64, y, 14, pool.current, pool.max, bar_color, RGB::named(rltk::BLACK));
 }
 
 struct Tooltip {

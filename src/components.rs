@@ -43,6 +43,7 @@ pub struct BlocksTile {}
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
     pub hp : Pool,
+    pub energy : Pool,
     pub defense : i32,
     pub power : i32
 }
@@ -172,9 +173,4 @@ pub struct Target {}
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToShoot {
     pub target : Entity
-}
-
-#[derive(Component, Debug, ConvertSaveload, Clone)]
-pub struct Energy {
-    pub energy : Pool
 }

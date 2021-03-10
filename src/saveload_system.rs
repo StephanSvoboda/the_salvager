@@ -72,8 +72,7 @@ pub fn save_game(ecs: &mut World) {
             MeleePowerBonus,
             WantsToRemoveItem,
             RangedWeapon,
-            WantsToShoot,
-            Energy
+            WantsToShoot
         );
     }
 
@@ -156,8 +155,7 @@ pub fn load_game(ecs: &mut World) {
             MeleePowerBonus,
             WantsToRemoveItem,
             RangedWeapon,
-            WantsToShoot,
-            Energy
+            WantsToShoot
         );
     }
 

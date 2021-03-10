@@ -312,7 +312,6 @@ fn main() -> rltk::BError{
     gs.ecs.register::<RangedWeapon>();
     gs.ecs.register::<Target>();
     gs.ecs.register::<WantsToShoot>();
-    gs.ecs.register::<Energy>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     
