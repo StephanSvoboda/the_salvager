@@ -44,6 +44,7 @@ pub struct BlocksTile {}
 pub struct CombatStats {
     pub hp : Pool,
     pub energy : Pool,
+    pub oxygen : Pool,
     pub defense : i32,
     pub power : i32
 }
@@ -76,11 +77,27 @@ pub struct DrainEnergy {
 
 impl DrainEnergy {
     pub fn new_energy(store: &mut WriteStorage<DrainEnergy>, victim: Entity, amount: i32) {
-        if let Some(suffering) = store.get_mut(victim) {
-            suffering.amount.push(amount);
+        if let Some(draining) = store.get_mut(victim) {
+            draining.amount.push(amount);
         } else {
             let dmg = DrainEnergy { amount : vec![amount] };
             store.insert(victim, dmg).expect("Unable to insert damage");
+        }
+    }
+}
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct BreathOxygen {
+    pub amount : Vec<i32>
+}
+
+impl BreathOxygen {
+    pub fn new_breath(store: &mut WriteStorage<BreathOxygen>, victim: Entity, amount: i32) {
+        if let Some(breathing) = store.get_mut(victim) {
+            breathing.amount.push(amount);
+        } else {
+            let breath = BreathOxygen { amount : vec![amount] };
+            store.insert(victim, breath).expect("Unable to insert damage");
         }
     }
 }

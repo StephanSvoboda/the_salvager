@@ -56,6 +56,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let player_stats = stats.get(*player_entity).unwrap();
     draw_pool(ctx, black, white, &player_stats.hp, RGB::named(rltk::RED), 2);
     draw_pool(ctx, black, white, &player_stats.energy, RGB::named(rltk::YELLOW), 4);
+    draw_pool(ctx, black, white, &player_stats.oxygen, RGB::named(rltk::BLUE), 6);
 
     // Equipped
     let mut y = 9;

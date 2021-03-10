@@ -3,7 +3,7 @@ use rltk::{VirtualKeyCode, Rltk};
 use specs::prelude::*;
 use super::{Position, Player, Map, State, Viewshed, RunState, CombatStats, WantsToMelee, Item, gamelog::GameLog, WantsToPickupItem};
 use std::cmp::{min, max};
-use crate::{Equipped, RangedWeapon, Robot, Target, WantsToShoot, Name};
+use crate::{Equipped, RangedWeapon, Robot, Target, WantsToShoot, Name, BreathOxygen};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -280,4 +280,10 @@ fn fire_on_target(ecs: &mut World) {
         log.entries.push("You don't have a target selected!".to_string());
     }
 
+}
+
+pub fn end_turn_breathing(ecs: &mut World){
+    let player_entity = ecs.fetch::<Entity>();
+    let mut oxygen_store = ecs.write_storage::<BreathOxygen>();
+    BreathOxygen::new_breath(&mut oxygen_store, *player_entity, 1)
 }

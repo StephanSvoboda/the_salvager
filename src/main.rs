@@ -38,6 +38,8 @@ mod saveload_system;
 mod camera;
 mod energy_system;
 use energy_system::EnergySystem;
+mod oxygen_system;
+use oxygen_system::OxygenSystem;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { 
@@ -75,6 +77,8 @@ impl State {
         damage.run_now(&self.ecs);
         let mut energy = EnergySystem{};
         energy.run_now(&self.ecs);
+        let mut oxygen = OxygenSystem{};
+        oxygen.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
         let mut item_use = ItemUseSystem{};
@@ -138,6 +142,7 @@ impl GameState for State {
                 new_run_state = player_input(self, ctx);
             }
             RunState::PlayerTurn => {
+                player::end_turn_breathing(&mut self.ecs);
                 self.run_systems();
                 player::end_turn_targeting(&mut self.ecs);
                 self.ecs.maintain();
@@ -317,6 +322,7 @@ fn main() -> rltk::BError{
     gs.ecs.register::<Target>();
     gs.ecs.register::<WantsToShoot>();
     gs.ecs.register::<DrainEnergy>();
+    gs.ecs.register::<BreathOxygen>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     

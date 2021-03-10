@@ -73,7 +73,8 @@ pub fn save_game(ecs: &mut World) {
             WantsToRemoveItem,
             RangedWeapon,
             WantsToShoot,
-            DrainEnergy
+            DrainEnergy,
+            BreathOxygen
         );
     }
 
@@ -157,7 +158,8 @@ pub fn load_game(ecs: &mut World) {
             WantsToRemoveItem,
             RangedWeapon,
             WantsToShoot,
-            DrainEnergy
+            DrainEnergy,
+            BreathOxygen
         );
     }
 

@@ -95,6 +95,11 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
                 max: 30,
                 name: "Energy".to_string(),
             },
+            oxygen: Pool {
+                current: 100,
+                max: 100,
+                name: "Oxygen".to_string(),
+            },
             defense: 2,
             power: 5,
         })
@@ -151,6 +156,11 @@ fn mob<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, 
                 current: 0,
                 max: 0,
                 name: "Energy".to_string(),
+            },
+            oxygen: Pool {
+                current: 0,
+                max: 0,
+                name: "Oxygen".to_string(),
             },
             defense: 1,
             power: 4,
