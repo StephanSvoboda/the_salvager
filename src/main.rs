@@ -31,6 +31,8 @@ use inventory_system::ItemCollectionSystem;
 use inventory_system::ItemUseSystem;
 use inventory_system::ItemDropSystem;
 use crate::inventory_system::ItemRemoveSystem;
+mod ranged_combat_system;
+use ranged_combat_system::RangedCombatSystem;
 
 mod saveload_system;
 mod camera;
@@ -65,6 +67,8 @@ impl State {
         mapindex.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem{};
         melee.run_now(&self.ecs);
+        let mut ranged_combat_system = RangedCombatSystem{};
+        ranged_combat_system.run_now(&self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
@@ -131,6 +135,7 @@ impl GameState for State {
             }
             RunState::PlayerTurn => {
                 self.run_systems();
+                player::end_turn_targeting(&mut self.ecs);
                 self.ecs.maintain();
                 new_run_state = RunState::MonsterTurn;
             }
@@ -306,6 +311,7 @@ fn main() -> rltk::BError{
     gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<RangedWeapon>();
     gs.ecs.register::<Target>();
+    gs.ecs.register::<WantsToShoot>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     

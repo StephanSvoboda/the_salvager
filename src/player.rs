@@ -1,9 +1,9 @@
-use rltk::{Point, console};
+use rltk::{Point};
 use rltk::{VirtualKeyCode, Rltk};
 use specs::prelude::*;
 use super::{Position, Player, Map, State, Viewshed, RunState, CombatStats, WantsToMelee, Item, gamelog::GameLog, WantsToPickupItem};
 use std::cmp::{min, max};
-use crate::{Equipped, RangedWeapon, Robot, Target};
+use crate::{Equipped, RangedWeapon, Robot, Target, WantsToShoot, Name};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -125,6 +125,7 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState{
                 cycle_target(&mut gs.ecs);
                 return RunState::AwaitingInput;
             }
+            VirtualKeyCode::F => fire_on_target(&mut gs.ecs),
 
             _ => { return RunState::AwaitingInput}
         },
@@ -162,7 +163,6 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
 }
 
 fn get_player_target_list(ecs : &mut World) -> Vec<(f32,Entity)> {
-    console::log("Reached get_player_target_list");
     let mut possible_targets : Vec<(f32,Entity)> = Vec::new();
     let viewsheds = ecs.read_storage::<Viewshed>();
     let player_entity = ecs.fetch::<Entity>();
@@ -199,15 +199,31 @@ fn get_player_target_list(ecs : &mut World) -> Vec<(f32,Entity)> {
 pub fn end_turn_targeting(ecs: &mut World) {
     let possible_targets = get_player_target_list(ecs);
     let mut targets = ecs.write_storage::<Target>();
+    let entities = ecs.entities();
+    let mut last_target : Option<Entity> = None;
+    for (entity, _target) in (&entities, &targets).join() {
+        last_target = Some(entity)
+    }
     targets.clear();
-
     if !possible_targets.is_empty() {
-        targets.insert(possible_targets[0].1, Target{}).expect("Insert fail");
+        let mut last_target_inserted = false;
+        if let Some(last_target) = last_target {
+            for entity in &possible_targets {
+                if entity.1 == last_target {
+                    targets.insert(entity.1, Target {}).expect("Insert fail");
+                    last_target_inserted = true;
+                }
+            }
+            if !last_target_inserted {
+                targets.insert(possible_targets[0].1, Target {}).expect("Insert fail");
+            }
+        }else{
+            targets.insert(possible_targets[0].1, Target {}).expect("Insert fail");
+        }
     }
 }
 
 fn cycle_target(ecs: &mut World) {
-    console::log("Reached cycle target");
     let possible_targets = get_player_target_list(ecs);
     let mut targets = ecs.write_storage::<Target>();
     let entities = ecs.entities();
@@ -239,7 +255,29 @@ fn cycle_target(ecs: &mut World) {
             targets.insert(possible_targets[0].1, Target{});
         }
     }
-    for (e, t) in (&entities, &targets).join() {
-        console::log(format!("Entity {} targeted", e.id().to_string()))
+}
+
+fn fire_on_target(ecs: &mut World) {
+    let targets = ecs.write_storage::<Target>();
+    let entities = ecs.entities();
+    let mut current_target : Option<Entity> = None;
+    let mut log = ecs.fetch_mut::<GameLog>();
+
+
+    for (e,_t) in (&entities, &targets).join() {
+        current_target = Some(e);
     }
+
+    if let Some(target) = current_target {
+        let player_entity = ecs.fetch::<Entity>();
+        let mut shoot_store = ecs.write_storage::<WantsToShoot>();
+        let names = ecs.read_storage::<Name>();
+        if let Some(name) = names.get(target) {
+            log.entries.push(format!("You fire at {}", name.name));
+        }
+        shoot_store.insert(*player_entity, WantsToShoot{ target }).expect("Insert Fail");
+    } else {
+        log.entries.push("You don't have a target selected!".to_string());
+    }
+
 }

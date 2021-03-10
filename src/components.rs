@@ -167,3 +167,8 @@ pub struct WantsToRemoveItem {
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Target {}
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct WantsToShoot {
+    pub target : Entity
+}
