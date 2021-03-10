@@ -1,7 +1,7 @@
 use rltk::{Point, RGB, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
-use crate::{camera, Consumable, Equipped, RangedWeapon};
+use crate::{camera, Consumable, Equipped, RangedWeapon, Pool};
 
 use super::{
     CombatStats,
@@ -54,7 +54,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let player_entity = ecs.fetch::<Entity>();
     let stats = ecs.read_storage::<CombatStats>();
     let player_stats = stats.get(*player_entity).unwrap();
-    draw_pool(ctx, black, white, player_stats);
+    draw_pool(ctx, black, white, &player_stats.hp);
 
     // Equipped
     let mut y = 9;
@@ -102,10 +102,10 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     draw_tooltips(ecs, ctx)
 }
 
-fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, player_stats: &CombatStats) {
-    let health = format!("Health: {}/{}", player_stats.hp.current, player_stats.hp.max);
-    ctx.print_color(50, 1, white, black, &health);
-    ctx.draw_bar_horizontal(64, 1, 14, player_stats.hp.current, player_stats.hp.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+fn draw_pool(ctx: &mut Rltk, black: RGB, white: RGB, pool: &Pool) {
+    let pool_text = format!("{}: {}/{}", pool.name, pool.current, pool.max);
+    ctx.print_color(50, 1, white, black, &pool_text);
+    ctx.draw_bar_horizontal(64, 1, 14, pool.current, pool.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
 }
 
 struct Tooltip {

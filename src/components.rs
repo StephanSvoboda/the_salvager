@@ -132,7 +132,8 @@ pub struct SerializationHelper {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Pool {
     pub max: i32,
-    pub current: i32
+    pub current: i32,
+    pub name: String
 }
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -171,4 +172,9 @@ pub struct Target {}
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToShoot {
     pub target : Entity
+}
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct Energy {
+    pub energy : Pool
 }
