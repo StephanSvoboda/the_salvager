@@ -154,7 +154,16 @@ pub struct MeleePowerBonus {
     pub power : i32
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct RangedWeapon {
+    pub range: i32,
+    pub damage: i32,
+}
+
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToRemoveItem {
     pub item : Entity
 }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Target {}

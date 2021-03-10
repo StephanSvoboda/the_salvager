@@ -1,5 +1,5 @@
 use super::{gamelog::GameLog, CombatStats, Name, SufferDamage, WantsToMelee};
-use crate::{Equipped, EquipmentSlot, InflictsDamage, MeleePowerBonus};
+use crate::{Equipped, MeleePowerBonus};
 use specs::prelude::*;
 
 pub struct MeleeCombatSystem {}

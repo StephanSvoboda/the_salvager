@@ -304,13 +304,15 @@ fn main() -> rltk::BError{
     gs.ecs.register::<Equipped>();
     gs.ecs.register::<MeleePowerBonus>();
     gs.ecs.register::<WantsToRemoveItem>();
+    gs.ecs.register::<RangedWeapon>();
+    gs.ecs.register::<Target>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
-    spawner::laser_torch(&mut gs.ecs, player_x, player_y);
+    spawner::blaster(&mut gs.ecs, player_x, player_y);
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {

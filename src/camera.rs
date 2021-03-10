@@ -1,6 +1,7 @@
 use specs::prelude::*;
 use super::{Map,TileType,Position,Renderable};
 use rltk::{Point, Rltk, RGB};
+use crate::Target;
 
 pub fn get_screen_bounds(ecs: &World) -> (i32, i32, i32, i32) {
     let player_pos = ecs.fetch::<Point>();
@@ -49,11 +50,13 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     // Render entities
     let positions = ecs.read_storage::<Position>();
     let renderables = ecs.read_storage::<Renderable>();
+    let entities = ecs.entities();
     let map = ecs.fetch::<Map>();
+    let targets = ecs.read_storage::<Target>();
 
-    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+    let mut data = (&positions, &renderables, &entities).join().collect::<Vec<_>>();
     data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-    for (pos, render) in data.iter() {
+    for (pos, render, entity) in data.iter() {
         let idx = map.xy_idx(pos.x, pos.y);
         if map.visible_tiles[idx] {
             let entity_screen_x = pos.x - min_x;
@@ -61,6 +64,13 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
             if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
                 ctx.set(entity_screen_x, entity_screen_y, render.fg, render.bg, render.glyph);
             }
+        }
+
+        if targets.get(*entity).is_some() {
+            let entity_screen_x = pos.x - min_x;
+            let entity_screen_y = pos.y - min_y;
+            ctx.set(entity_screen_x -1 , entity_screen_y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::YELLOW), rltk::to_cp437('['));
+            ctx.set(entity_screen_x + 1, entity_screen_y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::YELLOW), rltk::to_cp437(']'));
         }
     }
 }

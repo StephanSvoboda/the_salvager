@@ -1,7 +1,7 @@
 use rltk::{Point, RGB, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
-use crate::{camera, Consumable, Equipped};
+use crate::{camera, Consumable, Equipped, RangedWeapon};
 
 use super::{
     CombatStats,
@@ -15,11 +15,21 @@ use super::{
     Viewshed
 };
 
+pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
+    if let Some(name) = ecs.read_storage::<Name>().get(item) {
+        name.name.to_string()
+    } else {
+        "Nameless item (bug)".to_string()
+    }
+}
+
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     use rltk::to_cp437;
     let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
     let black = RGB::named(rltk::BLACK);
     let white = RGB::named(rltk::WHITE);
+    let green = RGB::from_f32(0.0, 1.0, 0.0);
+    let yellow = RGB::named(rltk::YELLOW);
 
     draw_hollow_box(ctx, 0, 0, 79, 59, box_gray, black); // Overall box
     draw_hollow_box(ctx, 0, 0, 49, 45, box_gray, black); // Map box
@@ -48,19 +58,24 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
 
     // Equipped
     let mut y = 9;
+    let entities = ecs.entities();
     let equipped = ecs.read_storage::<Equipped>();
-    let name = ecs.read_storage::<Name>();
-    for (equipped_by, item_name) in (&equipped, &name).join() {
+    let ranged_weapon = ecs.read_storage::<RangedWeapon>();
+    for (entity, equipped_by) in (&entities, &equipped).join() {
         if equipped_by.owner == *player_entity {
-            ctx.print_color(50, y, white, black, &item_name.name);
+            let name = get_item_display_name(ecs, entity);
+            ctx.print_color(50, y, white, black, &name);
             y += 1;
+
+            if let Some(weapon) = ranged_weapon.get(entity) {
+                let weapon_info = format!("┤ {} damage: {}, range: {}, F to fire, V cycle targets ├", &name, weapon.damage, weapon.range);
+                ctx.print_color(3, 45, yellow, black, &weapon_info);
+            }
         }
     }
 
 
     y += 1;
-    let green = RGB::from_f32(0.0, 1.0, 0.0);
-    let yellow = RGB::named(rltk::YELLOW);
     let consumables = ecs.read_storage::<Consumable>();
     let backpack = ecs.read_storage::<InBackpack>();
     let name = ecs.read_storage::<Name>();

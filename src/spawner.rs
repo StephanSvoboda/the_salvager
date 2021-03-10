@@ -21,8 +21,7 @@ use super::{
     Confusion,
     SerializeMe
 };
-use crate::{Pool, Equippable, EquipmentSlot, MeleePowerBonus};
-use crate::melee_combat_system::MeleeCombatSystem;
+use crate::{Pool, Equippable, EquipmentSlot, MeleePowerBonus, RangedWeapon};
 
 const MAX_ROBOTS : i32 = 4;
 const MAX_ITEMS : i32 = 2;
@@ -185,7 +184,7 @@ fn grenades(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-pub fn laser_torch(ecs: &mut World, x: i32, y: i32) {
+fn laser_torch(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position{ x, y })
         .with(Renderable{
@@ -197,6 +196,23 @@ pub fn laser_torch(ecs: &mut World, x: i32, y: i32) {
         .with(Name{ name : "Laser torch".to_string() })
         .with(Item{})
         .with(MeleePowerBonus{ power: 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .with(Equippable{ slot: EquipmentSlot::Weapon })
+        .build();
+}
+
+pub fn blaster(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('t'),
+            fg: RGB::named(rltk::LIGHTYELLOW1),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Blaster".to_string() })
+        .with(Item{})
+        .with(RangedWeapon { range: 4, damage: 4})
         .marked::<SimpleMarker<SerializeMe>>()
         .with(Equippable{ slot: EquipmentSlot::Weapon })
         .build();

@@ -1,8 +1,9 @@
-use rltk::Point;
+use rltk::{Point, console};
 use rltk::{VirtualKeyCode, Rltk};
 use specs::prelude::*;
 use super::{Position, Player, Map, State, Viewshed, RunState, CombatStats, WantsToMelee, Item, gamelog::GameLog, WantsToPickupItem};
 use std::cmp::{min, max};
+use crate::{Equipped, RangedWeapon, Robot, Target};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -119,6 +120,11 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState{
             VirtualKeyCode::D => return RunState::ShowDropItem,
             VirtualKeyCode::Escape => return RunState::SaveGame,
             VirtualKeyCode::R => return RunState::ShowRemoveItem,
+            // Ranged
+            VirtualKeyCode::V => {
+                cycle_target(&mut gs.ecs);
+                return RunState::AwaitingInput;
+            }
 
             _ => { return RunState::AwaitingInput}
         },
@@ -153,4 +159,87 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
         return RunState::PlayerTurn;
     }
     RunState::PlayerTurn
+}
+
+fn get_player_target_list(ecs : &mut World) -> Vec<(f32,Entity)> {
+    console::log("Reached get_player_target_list");
+    let mut possible_targets : Vec<(f32,Entity)> = Vec::new();
+    let viewsheds = ecs.read_storage::<Viewshed>();
+    let player_entity = ecs.fetch::<Entity>();
+    let equipped = ecs.read_storage::<Equipped>();
+    let ranged_weapons = ecs.read_storage::<RangedWeapon>();
+    let map = ecs.fetch::<Map>();
+    let positions = ecs.read_storage::<Position>();
+    let robots = ecs.read_storage::<Robot>();
+    for (equipped, ranged_weapon) in (&equipped, &ranged_weapons).join() {
+        if equipped.owner == *player_entity {
+            let range = ranged_weapon.range;
+
+            if let Some(viewshed) = viewsheds.get(*player_entity) {
+                let player_pos = positions.get(*player_entity).unwrap();
+                for tile_point in viewshed.visible_tiles.iter() {
+                    let tile_idx = map.xy_idx(tile_point.x, tile_point.y);
+                    let distance_to_target = rltk::DistanceAlg::Pythagoras.distance2d(*tile_point, rltk::Point::new(player_pos.x, player_pos.y));
+                    if distance_to_target < range as f32 {
+                        for possible_target in map.tile_content[tile_idx].iter() {
+                            if *possible_target != *player_entity && robots.get(*possible_target).is_some() {
+                                possible_targets.push((distance_to_target, *possible_target));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    possible_targets.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
+    possible_targets
+}
+
+pub fn end_turn_targeting(ecs: &mut World) {
+    let possible_targets = get_player_target_list(ecs);
+    let mut targets = ecs.write_storage::<Target>();
+    targets.clear();
+
+    if !possible_targets.is_empty() {
+        targets.insert(possible_targets[0].1, Target{}).expect("Insert fail");
+    }
+}
+
+fn cycle_target(ecs: &mut World) {
+    console::log("Reached cycle target");
+    let possible_targets = get_player_target_list(ecs);
+    let mut targets = ecs.write_storage::<Target>();
+    let entities = ecs.entities();
+    let mut current_target : Option<Entity> = None;
+
+    for (e,_t) in (&entities, &targets).join() {
+        current_target = Some(e);
+    }
+
+    targets.clear();
+    if let Some(current_target) = current_target {
+        if possible_targets.len() > 1 {
+            let mut index = 0;
+            for (i, target) in possible_targets.iter().enumerate() {
+                if target.1 == current_target {
+                    index = i;
+                }
+            }
+            let mut next_index = 0;
+            if index + 1 != possible_targets.len(){
+                next_index = index + 1;
+            }
+            targets.insert(possible_targets[next_index].1, Target{});
+        }else{
+            targets.insert(possible_targets[0].1, Target{});
+        }
+    }else{
+        if possible_targets.len() > 0 {
+            targets.insert(possible_targets[0].1, Target{});
+        }
+    }
+    for (e, t) in (&entities, &targets).join() {
+        console::log(format!("Entity {} targeted", e.id().to_string()))
+    }
 }
