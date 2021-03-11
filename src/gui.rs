@@ -432,16 +432,26 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum GameOverResult { NoSelection, QuitToMenu }
+pub enum GameEndResult { NoSelection, QuitToMenu }
 
-pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
-    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
+pub fn game_over(ctx : &mut Rltk) -> GameEndResult {
+    game_end(ctx, "YOU DIED".to_string(), "Your journey has ended!".to_string())
+}
+
+pub fn game_won(ctx : &mut Rltk) -> GameEndResult {
+    game_end(ctx, "YOU WON".to_string(), "You found the Artefact of Yendoria!".to_string())
+}
+
+pub fn game_end(ctx : &mut Rltk, title: String, text: String) -> GameEndResult {
+    ctx.draw_box(0, 13, 79, 9 as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color_centered(13, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), title);
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), text);
 
     ctx.print_color_centered(20, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
 
     match ctx.key {
-        None => GameOverResult::NoSelection,
-        Some(_) => GameOverResult::QuitToMenu
+        None => GameEndResult::NoSelection,
+        Some(_) => GameEndResult::QuitToMenu
     }
 }
 

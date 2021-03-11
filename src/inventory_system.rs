@@ -16,7 +16,7 @@ use super::{
     AreaOfEffect,
     Confusion
 };
-use crate::{Equippable, Equipped, WantsToRemoveItem};
+use crate::{Equippable, Equipped, WantsToRemoveItem, ProvidesOxygen, ProvidesEnergy};
 
 pub struct ItemCollectionSystem {}
 
@@ -65,7 +65,9 @@ impl<'a> System<'a> for ItemUseSystem {
                         WriteStorage<'a, Confusion>,
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
-                        WriteStorage<'a, InBackpack>
+                        WriteStorage<'a, InBackpack>,
+                        WriteStorage<'a,ProvidesOxygen>,
+                        WriteStorage<'a,ProvidesEnergy>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
@@ -85,7 +87,9 @@ impl<'a> System<'a> for ItemUseSystem {
             mut confused,
             equippable,
             mut equipped,
-            mut backpack
+            mut backpack,
+            oxygens,
+            energies
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -162,6 +166,40 @@ impl<'a> System<'a> for ItemUseSystem {
                             stats.hp.current = i32::min(stats.hp.max, stats.hp.current + healer.heal_amount);
                             if entity == *player_entity {
                                 gamelog.entries.push(format!("You inject the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                            }
+                            used_item = true
+                        }
+                    }
+                }
+            }
+
+            let oxygen_provider = oxygens.get(useitem.item);
+            match oxygen_provider {
+                None => {}
+                Some(oxygen) => {
+                    for target in targets.iter(){
+                        let stats = combat_stats.get_mut(*target);
+                        if let Some(stats) = stats {
+                            stats.oxygen.current = i32::min(stats.oxygen.max, stats.oxygen.current + oxygen.oxygen_amount);
+                            if entity == *player_entity {
+                                gamelog.entries.push(format!("You refill your oxygen with {} by {}%.", names.get(useitem.item).unwrap().name, oxygen.oxygen_amount));
+                            }
+                            used_item = true
+                        }
+                    }
+                }
+            }
+
+            let energy_provider = energies.get(useitem.item);
+            match energy_provider {
+                None => {}
+                Some(energy) => {
+                    for target in targets.iter(){
+                        let stats = combat_stats.get_mut(*target);
+                        if let Some(stats) = stats {
+                            stats.energy.current = i32::min(stats.energy.max, stats.energy.current + energy.energy_amount);
+                            if entity == *player_entity {
+                                gamelog.entries.push(format!("You refill your energy with {} by {} kAh.", names.get(useitem.item).unwrap().name, energy.energy_amount));
                             }
                             used_item = true
                         }

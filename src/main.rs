@@ -41,6 +41,7 @@ use energy_system::EnergySystem;
 mod oxygen_system;
 use oxygen_system::OxygenSystem;
 
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { 
     AwaitingInput,
@@ -53,7 +54,8 @@ pub enum RunState {
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
     GameOver,
-    ShowRemoveItem
+    ShowRemoveItem,
+    GameWon
  }
 
 pub struct State {
@@ -88,6 +90,7 @@ impl State {
         let mut item_remove = ItemRemoveSystem{};
         item_remove.run_now(&self.ecs);
         self.ecs.maintain();
+
     }
 }
 
@@ -213,8 +216,18 @@ impl GameState for State {
             RunState::GameOver => {
                 let result = gui::game_over(ctx);
                 match result {
-                    gui::GameOverResult::NoSelection => {}
-                    gui::GameOverResult::QuitToMenu => {
+                    gui::GameEndResult::NoSelection => {}
+                    gui::GameEndResult::QuitToMenu => {
+                        self.game_over_cleanup();
+                        new_run_state = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
+                    }
+                }
+            }
+            RunState::GameWon => {
+                let result = gui::game_won(ctx);
+                match result {
+                    gui::GameEndResult::NoSelection => {}
+                    gui::GameEndResult::QuitToMenu => {
                         self.game_over_cleanup();
                         new_run_state = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
                     }
@@ -323,6 +336,9 @@ fn main() -> rltk::BError{
     gs.ecs.register::<WantsToShoot>();
     gs.ecs.register::<DrainEnergy>();
     gs.ecs.register::<BreathOxygen>();
+    gs.ecs.register::<ProvidesOxygen>();
+    gs.ecs.register::<ProvidesEnergy>();
+    gs.ecs.register::<ArtefactFromYendoria>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     
@@ -330,6 +346,10 @@ fn main() -> rltk::BError{
     let (player_x, player_y) = map.rooms[0].center();
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
     spawner::blaster(&mut gs.ecs, player_x, player_y);
+    spawner::battery(&mut gs.ecs, player_x+1, player_y);
+    spawner::stim_packs(&mut gs.ecs, player_x, player_y+1);
+    spawner::artefact(&mut gs.ecs, player_x-1, player_y);
+
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {

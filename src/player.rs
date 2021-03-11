@@ -3,7 +3,7 @@ use rltk::{VirtualKeyCode, Rltk};
 use specs::prelude::*;
 use super::{Position, Player, Map, State, Viewshed, RunState, CombatStats, WantsToMelee, Item, gamelog::GameLog, WantsToPickupItem};
 use std::cmp::{min, max};
-use crate::{Equipped, RangedWeapon, Robot, Target, WantsToShoot, Name, BreathOxygen};
+use crate::{Equipped, RangedWeapon, Robot, Target, WantsToShoot, Name, BreathOxygen, ArtefactFromYendoria};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -44,7 +44,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();    
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
 
     let mut target_item : Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {
@@ -115,7 +115,12 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState{
             VirtualKeyCode::Numpad1 |
             VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
 
-            VirtualKeyCode::G => get_item(&mut gs.ecs),
+            VirtualKeyCode::G => {
+                get_item(&mut gs.ecs);
+                if check_game_won(&mut gs.ecs) {
+                    return RunState::GameWon;
+                }
+            },
             VirtualKeyCode::I => return RunState::ShowInventory,
             VirtualKeyCode::D => return RunState::ShowDropItem,
             VirtualKeyCode::Escape => return RunState::SaveGame,
@@ -131,6 +136,21 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState{
         },
     }
     RunState::PlayerTurn
+}
+
+fn check_game_won(ecs: &mut World) -> bool {
+    let player_entity = ecs.fetch::<Entity>();
+    let entities = ecs.entities();
+    let wants_pick_ups = ecs.read_storage::<WantsToPickupItem>();
+
+    for (wants_pick_up,entity) in (&wants_pick_ups, &entities).join() {
+        if wants_pick_up.collected_by == * player_entity {
+            if let Some(artefact) = ecs.read_storage::<ArtefactFromYendoria>().get(wants_pick_up.item){
+                return true;
+            }
+        }
+    }
+    false
 }
 
 fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {

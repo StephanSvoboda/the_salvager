@@ -3,7 +3,7 @@ use super::{
     Item, Name, Player, Position, ProvidesHealing, Ranged, Rect, Renderable, Robot, SerializeMe,
     Viewshed,
 };
-use crate::{EquipmentSlot, Equippable, MeleePowerBonus, Pool, RangedWeapon};
+use crate::{EquipmentSlot, Equippable, MeleePowerBonus, Pool, RangedWeapon, ProvidesOxygen, ProvidesEnergy, ArtefactFromYendoria};
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
@@ -173,17 +173,19 @@ fn random_item(ecs: &mut World, x: i32, y: i32) {
     let roll: i32;
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1, 4);
+        roll = rng.roll_dice(1, 6);
     }
     match roll {
         1 => stim_packs(ecs, x, y),
         2 => laser_torch(ecs, x, y),
         3 => emp_bombs(ecs, x, y),
+        4 => oxygen_canister(ecs, x, y),
+        5 => battery(ecs, x, y),
         _ => grenades(ecs, x, y),
     }
 }
 
-fn stim_packs(ecs: &mut World, x: i32, y: i32) {
+pub fn stim_packs(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
@@ -285,5 +287,61 @@ fn emp_bombs(ecs: &mut World, x: i32, y: i32) {
         .with(Ranged { range: 6 })
         .with(Confusion { turns: 4 })
         .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn oxygen_canister(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('o'),
+            fg: RGB::named(rltk::AQUA),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Oxygen Canister".to_string(),
+        })
+        .with(Item {})
+        .with(Consumable {})
+        .with(ProvidesOxygen{oxygen_amount: 10})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn battery(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('b'),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Battery".to_string(),
+        })
+        .with(Item {})
+        .with(Consumable {})
+        .with(ProvidesEnergy{energy_amount: 10})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn artefact(ecs: &mut World, x: i32, y: i32){
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('Y'),
+            fg: RGB::named(rltk::GOLD),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Artefact from Yendoria".to_string(),
+        })
+        .with(Item {})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .with(ArtefactFromYendoria{})
         .build();
 }

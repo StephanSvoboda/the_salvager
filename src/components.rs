@@ -207,3 +207,16 @@ pub struct Target {}
 pub struct WantsToShoot {
     pub target : Entity
 }
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct ProvidesOxygen {
+    pub oxygen_amount : i32
+}
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct ProvidesEnergy {
+    pub energy_amount : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ArtefactFromYendoria {}

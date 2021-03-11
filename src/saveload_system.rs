@@ -74,7 +74,10 @@ pub fn save_game(ecs: &mut World) {
             RangedWeapon,
             WantsToShoot,
             DrainEnergy,
-            BreathOxygen
+            BreathOxygen,
+            ProvidesOxygen,
+            ProvidesEnergy,
+            ArtefactFromYendoria
         );
     }
 
@@ -159,7 +162,10 @@ pub fn load_game(ecs: &mut World) {
             RangedWeapon,
             WantsToShoot,
             DrainEnergy,
-            BreathOxygen
+            BreathOxygen,
+            ProvidesOxygen,
+            ProvidesEnergy,
+            ArtefactFromYendoria
         );
     }
 
