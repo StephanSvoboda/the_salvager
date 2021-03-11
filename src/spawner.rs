@@ -309,6 +309,25 @@ fn oxygen_canister(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
+pub fn oxygen_tank(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('O'),
+            fg: RGB::named(rltk::AQUA),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Oxygen Tank".to_string(),
+        })
+        .with(Item {})
+        .with(Consumable {})
+        .with(ProvidesOxygen{oxygen_amount: 50})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
 pub fn battery(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })

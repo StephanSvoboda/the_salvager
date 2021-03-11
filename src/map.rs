@@ -9,8 +9,8 @@ use rltk::{ RGB, Rltk };
 use super::{Rect};
 use serde::{Serialize, Deserialize};
 
-pub const MAP_WIDTH : usize = 64;
-pub const MAP_HEIGHT : usize = 64;
+pub const MAP_WIDTH : usize = 48;
+pub const MAP_HEIGHT : usize = 48;
 pub const MAP_COUNT : usize = MAP_WIDTH * MAP_HEIGHT;
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -104,11 +104,23 @@ impl Map {
     
         let mut rng = RandomNumberGenerator::new();
     
-        for _ in 0..MAX_ROOMS {
-            let room_width = rng.range(MIN_SIZE, MAX_SIZE);
-            let room_height = rng.range(MIN_SIZE, MAX_SIZE);
-            let x = rng.roll_dice(1, map.width - room_width - 1) -1;
-            let y = rng.roll_dice(1, map.height - room_height - 1) -1;
+        for i in 0..MAX_ROOMS {
+            let room_width;
+            let room_height;
+            let x;
+            let y;
+            if i == 0{
+                room_width = rng.range(MIN_SIZE, MAX_SIZE);
+                room_height = rng.range(MIN_SIZE, MAX_SIZE);
+                x = 1;
+                y = 1;
+            }else{
+                room_width = rng.range(MIN_SIZE, MAX_SIZE);
+                room_height = rng.range(MIN_SIZE, MAX_SIZE);
+                x = rng.roll_dice(1, map.width - room_width - 1) -1;
+                y = rng.roll_dice(1, map.height - room_height - 1) -1;
+
+            }
             let new_room = Rect::new(x, y, room_width, room_height);
             let mut ok = true;
             for other_room in map.rooms.iter() {

@@ -40,6 +40,7 @@ mod energy_system;
 use energy_system::EnergySystem;
 mod oxygen_system;
 use oxygen_system::OxygenSystem;
+use crate::gamelog::GameLog;
 
 
 #[derive(PartialEq, Copy, Clone)]
@@ -121,7 +122,10 @@ impl GameState for State {
                     gui::MainMenuResult::NoSelection{ selected } => new_run_state = RunState::MainMenu{ menu_selection: selected },
                     gui::MainMenuResult::Selected{ selected } => {
                         match selected {
-                            gui::MainMenuSelection::NewGame => new_run_state = RunState::PreRun,
+                            gui::MainMenuSelection::NewGame => {
+                                self.game_over_cleanup();
+                                new_run_state = RunState::PreRun;
+                            }
                             gui::MainMenuSelection::LoadGame => {
                                 saveload_system::load_game(&mut self.ecs);
                                 new_run_state = RunState::AwaitingInput;
@@ -257,21 +261,23 @@ impl State {
         }
     
         // Build a new map and place the player
-        let worldmap;
+        let map;
         {
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = Map::new_map_rooms_and_corridors();
-            worldmap = worldmap_resource.clone();
+            let mut map_ressource = self.ecs.write_resource::<Map>();
+            *map_ressource = Map::new_map_rooms_and_corridors();
+            map = map_ressource.clone();
         }
     
         // Spawn bad guys
-        for room in worldmap.rooms.iter().skip(1) {
+        for room in map.rooms.iter().skip(1) {
             spawner::spawn_room(&mut self.ecs, room);
         }
     
         // Place the player and update resources
-        let (player_x, player_y) = worldmap.rooms[0].center();
+        let (player_x, player_y) = map.rooms[0].center();
         let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
+        self.spawn_start_inventory(player_x, player_y);
+        self.spawn_artefact_of_yendoria(map);
         let mut player_position = self.ecs.write_resource::<Point>();
         *player_position = Point::new(player_x, player_y);
         let mut position_components = self.ecs.write_storage::<Position>();
@@ -282,13 +288,28 @@ impl State {
             player_pos_comp.x = player_x;
             player_pos_comp.y = player_y;
         }
-    
+
         // Mark the player's visibility as dirty
         let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
         let vs = viewshed_components.get_mut(player_entity);
         if let Some(vs) = vs {
             vs.dirty = true;
-        }                                               
+        }
+
+        let mut log = self.ecs.fetch_mut::<GameLog>();
+        log.entries = vec!["Salvager retrieve another Artefact of Yendoria.".to_string()]
+    }
+
+    fn spawn_start_inventory(&mut self, player_x: i32, player_y: i32) {
+        spawner::blaster(&mut self.ecs, player_x + 1, player_y);
+        spawner::battery(&mut self.ecs, player_x + 2, player_y);
+        spawner::stim_packs(&mut self.ecs, player_x + 2, player_y + 1);
+        spawner::oxygen_tank(&mut self.ecs, player_x + 2, player_y + 2);
+    }
+
+    fn spawn_artefact_of_yendoria(&mut self, map: Map) {
+        let (artefact_x, artefact_y) = map.rooms.last().unwrap().center();
+        spawner::artefact(&mut self.ecs, artefact_x, artefact_y);
     }
 }
 
@@ -345,22 +366,25 @@ fn main() -> rltk::BError{
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
-    spawner::blaster(&mut gs.ecs, player_x, player_y);
-    spawner::battery(&mut gs.ecs, player_x+1, player_y);
-    spawner::stim_packs(&mut gs.ecs, player_x, player_y+1);
-    spawner::artefact(&mut gs.ecs, player_x-1, player_y);
 
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
         spawner::spawn_room(&mut gs.ecs, room);
     }
-    
+
+    spawner::blaster(&mut gs.ecs, player_x + 1, player_y);
+    spawner::battery(&mut gs.ecs, player_x + 2, player_y);
+    spawner::stim_packs(&mut gs.ecs, player_x + 2, player_y + 1);
+    spawner::oxygen_tank(&mut gs.ecs, player_x + 2, player_y + 2);
+    let (artefact_x, artefact_y) = map.rooms.last().unwrap().center();
+    spawner::artefact(&mut gs.ecs, artefact_x, artefact_y);
+
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::MainMenu{menu_selection: MainMenuSelection::NewGame });
-    gs.ecs.insert(gamelog::GameLog{ entries : vec!["The salvager take a deep breath.".to_string()] });
+    gs.ecs.insert(gamelog::GameLog{ entries : vec!["Salvager retrieve the Artefact of Yendoria.".to_string()] });
 
     rltk::main_loop(context, gs)
 }
