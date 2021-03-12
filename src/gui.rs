@@ -42,6 +42,19 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     ctx.set(79, 8, box_gray, black, to_cp437('┤'));
     ctx.set(79, 45, box_gray, black, to_cp437('┤'));
 
+    let instruction_line = 24;
+    ctx.print(50, instruction_line, "Instructions");
+    ctx.print(50, instruction_line+2, "Movement     Arrowkeys ");
+    ctx.print(50, instruction_line+4, "Movement     Numpad(diagonal)");
+    ctx.print(50, instruction_line+6, "Grab item    G");
+    ctx.print(50, instruction_line+8, "Inventory    I");
+    ctx.print(50, instruction_line+10, "Drop item    D");
+    ctx.print(50, instruction_line+12, "Remove item  R");
+    ctx.print(50, instruction_line+14, "Item short cut  SHIFT-Number");
+    ctx.print(50, instruction_line+16, "Ranged Weapon");
+    ctx.print(50, instruction_line+18, "Target       V");
+    ctx.print(50, instruction_line+20, "Shoot        F");
+
     let map = ecs.fetch::<Map>();
     let name_length = map.name.len() + 2;
     let x_pos = (22 - (name_length / 2)) as i32;
