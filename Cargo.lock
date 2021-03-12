@@ -53,6 +53,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "000444226fcff248f2bc4c7625be32c63caccfecc2723a2b9f78a7487a49c407"
 
 [[package]]
+name = "anyhow"
+version = "1.0.38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afddf7f520a80dbf76e6f50a35bca42a2331ef227a28b3b6dc5c2e2338d114b1"
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,8 +91,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "bracket-algorithm-traits"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af23ee41725dd41febe5f614851db8e5d44c07254dd91838b5ddf817060e2e73"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "bracket-geometry",
  "smallvec",
@@ -95,8 +100,7 @@ dependencies = [
 [[package]]
 name = "bracket-color"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c1d1b160817fb74eebedccd678055cd688d1a73dc1a14519fa30ff4c9a5bdee"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "byteorder",
  "lazy_static",
@@ -107,8 +111,7 @@ dependencies = [
 [[package]]
 name = "bracket-geometry"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c551a0c9ad538aa658a4b82d178e0fcaa151db74de5c92dce24fcacc756b82f8"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "serde",
  "ultraviolet",
@@ -116,9 +119,8 @@ dependencies = [
 
 [[package]]
 name = "bracket-lib"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0fb005e908ce2e553277e554c32ab06d8b12bea38660da98f2e77e662dea617"
+version = "0.8.2"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-color",
@@ -132,8 +134,7 @@ dependencies = [
 [[package]]
 name = "bracket-noise"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60de9564f6a658c770666a6cf6ccf837f0669f5906f67de7f089bebe09b46723"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "bracket-random",
 ]
@@ -141,8 +142,7 @@ dependencies = [
 [[package]]
 name = "bracket-pathfinding"
 version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b713222141585b5e5cc6f0be1a0a473e1e339aa1300af91929ce6b1b2ed529c"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-geometry",
@@ -151,28 +151,29 @@ dependencies = [
 
 [[package]]
 name = "bracket-random"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66b5b977a40a6be337b2baff6911051966c61bd3987836c13e96f518ec4ba312"
+version = "0.8.3"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
+ "getrandom",
+ "js-sys",
  "lazy_static",
  "rand",
  "rand_xorshift",
  "regex",
  "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "bracket-terminal"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "281e269508f2c61dcd10934f04476bb22626290d361ddd1cd504d0559002d41d"
+version = "0.8.3"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
+ "anyhow",
  "bracket-color",
  "bracket-geometry",
  "byteorder",
  "console_error_panic_hook",
- "ctrlc",
  "flate2",
  "glow",
  "glutin",
@@ -471,16 +472,6 @@ dependencies = [
  "autocfg",
  "cfg-if 1.0.0",
  "lazy_static",
-]
-
-[[package]]
-name = "ctrlc"
-version = "3.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c15b8ec3b5755a188c141c1f6a98e76de31b936209bf066b647979e2a84764a9"
-dependencies = [
- "nix 0.20.0",
- "winapi 0.3.9",
 ]
 
 [[package]]
@@ -1324,12 +1315,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ppv-lite86"
-version = "0.2.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
-
-[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1362,19 +1347,6 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ef9e7e66b4468674bfcb0c81af8b7fa0bb154fa9f28eb840da5c447baeb8d7e"
 dependencies = [
- "libc",
- "rand_chacha",
- "rand_core",
- "rand_hc",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e12735cf05c9e10bf21534da50a147b924d555dc7a547c42e6bb2d5b6017ae0d"
-dependencies = [
- "ppv-lite86",
  "rand_core",
 ]
 
@@ -1383,18 +1355,6 @@ name = "rand_core"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34cf66eb183df1c5876e2dcf6b13d57340741e8dc255b48e40a26de954d06ae7"
-dependencies = [
- "getrandom",
-]
-
-[[package]]
-name = "rand_hc"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3190ef7066a446f2e7f42e239d161e905420ccab01eb967c9eb27d21b2322a73"
-dependencies = [
- "rand_core",
-]
 
 [[package]]
 name = "rand_xorshift"
@@ -1476,8 +1436,7 @@ checksum = "b5eb417147ba9860a96cfe72a0b93bf88fee1744b5636ec99ab20c1aa9376581"
 [[package]]
 name = "rltk"
 version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c83076f8174384edf79d3f4a91934b8c0e1feed6eed943608d54af790f0a7dd"
+source = "git+https://github.com/amethyst/bracket-lib#927d2292b5e74dd6ef16b46bc9e40c815c36c8a0"
 dependencies = [
  "bracket-lib",
 ]
